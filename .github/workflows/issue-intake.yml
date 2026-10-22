@@ -1,0 +1,26 @@
+name: Issue receipt
+on:
+  issues:
+    types: [opened]
+permissions:
+  contents: read
+  issues: write
+concurrency:
+  group: issue-receipt-${{ github.event.issue.number }}
+  cancel-in-progress: false
+jobs:
+  acknowledge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- coinpulse-intake-v1 -->';
+            const params = {...context.repo, issue_number: context.issue.number};
+            const comments = await github.paginate(github.rest.issues.listComments, params);
+            if (comments.some(c => c.user.type === 'Bot' && c.body.includes(marker))) return;
+            await github.rest.issues.createComment({
+              ...params,
+              body: marker + '\nThanks for the report. Coinpulse maintenance will review whether this is a reproducible bug, a useful crypto feature/design improvement, a duplicate, or outside the project scope.\n\nThis is an automatic receipt, not an acceptance decision. The maintainer checks every five minutes while its host is available; review and fixes may take longer. It will reply here with its decision and reason, and post an update when an agent actually starts work.'
+            });
