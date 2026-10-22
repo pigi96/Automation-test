@@ -25,4 +25,4 @@ GitHub Actions validates pushes and pull requests without an AI service or API k
 Production is hosted by Sites. A GitHub push alone does not deploy it.
 Repository: https://github.com/pigi96/Automation-test
 Existing Sites project: appgprj_6ad9f29006588191b0be6188564694af.
-See [maintenance policy](docs/maintenance.md). Unattended AI maintenance is paused pending an enforceable usage budget.
+See [maintenance policy](docs/maintenance.md). New issues receive an event-triggered GitHub acknowledgement. Codex maintenance checks every five minutes while its local host and app are available, replies with a classification and decision, and handles justified crypto-related fixes. The owner removed the previous weekly cap; ordinary account limits still apply.
