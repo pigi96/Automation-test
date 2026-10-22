@@ -1,3 +1,4 @@
+import {selectForecastEvidence,summarizeForecastSentiment} from './forecast-signals';
 import type { Point } from './market-utils';
 export const DAY = 86400000;
 export const HORIZONS = [{days:1,label:'1 day',min:8},{days:7,label:'7 days',min:15},{days:30,label:'30 days',min:31},{days:90,label:'90 days',min:61},{days:365,label:'1 year',min:181}] as const;
@@ -9,26 +10,9 @@ export function dailyPrices(points:Point[]):Daily[]{
   for(const p of [...points].sort((a,b)=>a.time-b.time))if(Number.isFinite(p.time)&&Number.isFinite(p.price)&&p.price>0)days.set(Math.floor(p.time/DAY),{time:p.time,price:p.price});
   return [...days.values()];
 }
-const positive=new Set('approval approved adoption adopt breakthrough bullish gain gains growth grow inflow inflows launch launches partnership rally rallies rebound rebounds recovery recover rises surge surges upgrade win wins'.split(' '));
-const negative=new Set('ban banned bearish breach collapse crash crashes decline declines down downgrade exploit exploited falls falling fraud hack hacked hacks lawsuit liquidation liquidations loss losses outflow outflows plunge plunges scam selloff slump slumps theft'.split(' '));
-export function textScore(text:string):number{
-  const tokens=text.toLowerCase().replace(/https?:\/\/\S+/g,' ').match(/[a-z]+/g)||[];let value=0,hits=0;
-  tokens.forEach((word,i)=>{let score=positive.has(word)?1:negative.has(word)?-1:0;if(score){if(tokens.slice(Math.max(0,i-3),i).some(w=>['not','no','never','without'].includes(w)))score=-score;value+=score;hits++}});
-  return hits?bound(value/Math.sqrt(hits),-1,1):0;
-}
-export function relevantItems(items:SignalItem[],name:string,symbol:string,now=Date.now()):SignalItem[]{
-  const escape=(s:string)=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  const common=new Set(['just','sky','near','link','gate','render','rain','quant','pearl','flow']);
-  const full=new RegExp('(^|[^a-z0-9])'+escape(name)+'(?=$|[^a-z0-9])',common.has(name.toLowerCase())?'':'i');
-  const cash=new RegExp('\\$'+escape(symbol)+'\\b','i');
-  const seen=new Set<string>();
-  return items.filter(item=>{const time=Date.parse(item.date),text=item.title+' '+(item.text||'');const key=item.title.toLowerCase().replace(/https?:\/\/\S+/g,'').replace(/[^a-z0-9]/g,'');if(!Number.isFinite(time)||time>now+900000||now-time>7*DAY||(!full.test(text)&&!cash.test(text))||seen.has(key))return false;seen.add(key);return true;});
-}
-export function sentiment(items:SignalItem[],now=Date.now()){
-  let total=0,weights=0,scored=0;
-  for(const item of items){const score=textScore(item.title+' '+(item.text||''));const age=Math.max(0,now-Date.parse(item.date));const weight=Math.exp(-age/(2*DAY));total+=score*weight;weights+=weight;if(score)scored++}
-  return {score:weights?bound(total/weights,-1,1):0,count:items.length,scored};
-}
+export {scoreText as textScore} from './forecast-signals';
+export function relevantItems(items:SignalItem[],name:string,symbol:string,now=Date.now()){return selectForecastEvidence(items,name,symbol,now)}
+export function sentiment(items:SignalItem[],now=Date.now()){return summarizeForecastSentiment(items,now)}
 export function fitPriceModel(daily:Daily[]){
   const tail=daily.slice(-181);if(tail.length<8)throw new Error('At least 8 daily price observations are needed.');
   const returns=tail.slice(1).map((p,i)=>Math.log(p.price/tail[i].price)/Math.sqrt(Math.max(1,(p.time-tail[i].time)/DAY)));
