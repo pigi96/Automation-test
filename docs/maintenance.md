@@ -40,3 +40,13 @@ Examples, adapted to the actual evidence:
 - Out of scope: “I’m leaving this out because it doesn’t help with crypto research. Coinpulse is staying focused on that.”
 - Needs information: “I couldn’t reproduce this yet. Which coin and timeframe were you using?”
 - Shipped: “Fixed — the chart now refreshes when you switch coins. It’s live. [PR link]”
+
+## Proactive improvements and independent review
+
+The owner authorizes proactive issue creation and up to three concurrent agents in total, including the coordinator. Use bounded implementation or review subtasks; agents must not replicate themselves, create more schedulers, or exceed that shared limit. Keep a single maintenance schedule.
+
+Create focused issues for evidence-backed defects and useful crypto research improvements. Search open and closed issues first; link duplicates and previous decisions. Each proposal needs source/UI evidence, user benefit, a bounded scope, acceptance criteria, and validation. Give human reports priority. Keep at most six open proactive implementation issues (roadmap tracking issues excluded), create at most one new proactive issue per scheduled run, and only replenish when capacity exists. An improvement audit may run at most once per day, not on every five-minute poll. Do not invent work merely to keep agents busy. Track audit time and created issue IDs in durable local state.
+
+Larger ideas belong in a roadmap issue broken into independent deliverables with explicit dependencies. A roadmap is a queue, not authorization for a monolithic rewrite. Complete and verify one increment at a time. Do not expand goals or initiate unrelated projects.
+
+Every change requires a branch and pull request before merge, including maintenance-policy edits. An independent agent that did not author the change must review the current PR head and relevant tests for correctness, regressions, product fit and scope. Record the review in a PR comment with the reviewed commit SHA, reviewer role, findings, and disposition. This is an agent review, not a fabricated GitHub human approval. If branch protection requires a formal approval this account cannot provide, wait for a qualified reviewer; never bypass it. Resolve review findings, repeat review after substantive revisions, and merge only after required checks pass for the final head. Attach PRs to this chat. Publish reviewed site code via Sites, verify it, and then close the issue with links. Documentation-only changes need no site deployment.
