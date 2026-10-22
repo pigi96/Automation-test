@@ -1,0 +1,13 @@
+/* Preserve the existing card while native showModal supplies the top layer. */
+dialog.dialog {
+ position: fixed;
+ inset: 0;
+ margin: auto;
+ width: min(570px, calc(100% - 40px));
+ max-height: min(90vh, calc(100dvh - 40px));
+ color: inherit;
+}
+.dialog::backdrop {
+ background: #17332260;
+ backdrop-filter: blur(4px);
+}
