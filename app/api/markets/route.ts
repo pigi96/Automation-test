@@ -1,4 +1,5 @@
 import { GET as marketFeed } from '../radar/route';
+import { normalizeAsset } from '../../asset-identity';
 type Entry = { at: number; data: unknown };
 const cache = new Map<string, Entry>();
 const pending = new Map<string, Promise<unknown>>();
@@ -15,16 +16,11 @@ async function snapshot() {
 }
 async function chart(id: string, days: number) {
   const market = await snapshot();
-  const coin = market.coins.find((c: any) => c.id === id);
+  const coin = market.coins.map((c:any)=>normalizeAsset(c,market.provider)).find((c: any) => c.id === id);
   if (!coin) throw new Error('Select a coin in the current top 100 market list.');
   try {
-    let geckoId = coin.id;
-    if (market.provider !== 'CoinGecko') {
-      const search = await remote('https://api.coingecko.com/api/v3/search?query=' + encodeURIComponent(coin.name));
-      const match = search.coins?.find((c: any) => c.name.toLowerCase() === coin.name.toLowerCase() && c.symbol.toLowerCase() === coin.symbol.toLowerCase());
-      if (!match) throw new Error('No matching historical asset.');
-      geckoId = match.id;
-    }
+    const geckoId = coin.gecko_id;
+    if (!geckoId) throw new Error('No verified CoinGecko mapping is available for this provider asset.');
     const result = await remote(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(geckoId)}/market_chart?vs_currency=usd&days=${days}`);
     const prices = (result.prices || []).filter((p: any) => Array.isArray(p) && Number.isFinite(p[0]) && Number.isFinite(p[1]) && p[1] > 0).sort((a: number[], b: number[]) => a[0] - b[0]);
     if (prices.length < 2) throw new Error('Not enough historical prices.');
@@ -34,6 +30,7 @@ async function chart(id: string, days: number) {
     return { points, coinId: id, days, provider: 'CoinGecko', volumeUnit: 'USD', volumeKind: 'rolling24h', updatedAt: new Date().toISOString(), sampled: stride > 1 };
   } catch {
     // Exchange fallback verifies asset identity, not only an ambiguous ticker.
+    if (coin.source_provider === 'CoinPaprika' && !coin.identity_verified) throw new Error('Price history unavailable: this asset has no verified cross-provider mapping.');
     const symbol = coin.symbol.toUpperCase();
     if (!/^[A-Z0-9]{1,15}$/.test(symbol)) throw new Error('Price history is temporarily unavailable for this asset.');
     const currency = await remote('https://api.exchange.coinbase.com/currencies/' + symbol);
@@ -73,7 +70,7 @@ export async function GET(request: Request) {
   if (!['chart', 'global'].includes(mode) || (mode === 'chart' && (!/^[a-z0-9-]{1,100}$/.test(id) || ![1, 7, 30, 90, 365].includes(days)))) return Response.json({ error: 'Invalid chart request.' }, { status: 400 });
   const key = `${mode}:${id}:${days}`;
   const edge = (globalThis as any).caches?.default;
-  const edgeKey = new Request(new URL('/_cache/market-history-v2/' + encodeURIComponent(key), request.url));
+  const edgeKey = new Request(new URL('/_cache/market-history-v3/' + encodeURIComponent(key), request.url));
   const staleKey = new Request(edgeKey.url + '/last-success');
   if(edge){try{const shared=await edge.match(edgeKey);if(shared)return new Response(shared.body,{status:shared.status,headers:new Headers(shared.headers)});}catch{}}
   const old = cache.get(key);
