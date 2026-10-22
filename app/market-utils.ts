@@ -1,4 +1,5 @@
 export type Coin = {
+  provider_id?: string; gecko_id?: string; identity_verified?: boolean;
   source_provider?: string; id: string; name: string; symbol: string; image?: string; market_cap_rank: number;
   current_price: number; market_cap: number; total_volume: number; price_change_percentage_24h: number;
   price_change_percentage_7d_in_currency?: number; high_24h?: number; low_24h?: number;
