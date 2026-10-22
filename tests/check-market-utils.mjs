@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import { portfolioValue, movingAverage, crossing, usd, percent } from '../app/market-utils.ts';
+const coins=[{id:'btc',current_price:80000},{id:'eth',current_price:2000}];
+const positions=portfolioValue([{coinId:'btc',units:0.5,cost:60000},{coinId:'eth',units:2,cost:2500},{coinId:'missing',units:1,cost:100}],coins);
+assert.equal(positions[0].value,40000);assert.equal(positions[0].pnl,10000);
+assert.equal(positions[1].value,4000);assert.equal(positions[1].pnl,-1000);
+assert.equal(positions[2].value,null);assert.equal(positions[2].pnl,null);
+assert.equal(crossing('above',80000,80000),true);assert.equal(crossing('below',80000,80000),true);
+assert.equal(crossing('above',90000,80000),false);assert.equal(crossing('below',70000,80000),false);
+const average=movingAverage(Array.from({length:25},(_,i)=>({time:i,price:i+1,volume:10})),20);
+assert.equal(average[18].average,null);assert.equal(average[19].average,10.5);assert.equal(average[24].average,15.5);
+assert.equal(usd(null),'—');assert.equal(percent(undefined),'—');assert.equal(percent(-4.329),'-4.33%');
+console.log('Portfolio valuation, missing prices, alert equality boundaries, moving average, and formatting: passed.');
