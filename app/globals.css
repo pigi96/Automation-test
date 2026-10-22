@@ -60,7 +60,7 @@
 .market-desk .movers-row button{font-size:12px;font-weight:550;color:var(--desk-ink)}
 .market-desk .movers-row button span{font-size:11px}
 .market-desk .market-tools>input::placeholder{color:var(--desk-muted);font-weight:400}
-.market-desk .heatmap b{font-size:13px;font-weight:700}
+.market-desk .heatmap b{font-size:13px;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .market-desk .heatmap span{font-size:11px}
 .market-desk .heatmap small{font-size:9px;opacity:.9}
 .market-desk .wide-table th{font-size:11px;color:var(--desk-muted);font-weight:650;background:var(--desk-soft)}
@@ -108,6 +108,8 @@
  .market-desk .heatmap small{font-size:8px}
 }
 @media(max-width:420px){
+ .market-desk .movers-row b{display:block;white-space:normal}
+ .market-desk .movers-row b small{display:block;margin-top:4px}
  .market-desk .portfolio-stats b{font-size:20px}
  .market-desk .context-strip b{font-size:19px}
  .market-desk .context-strip b em{font-size:9px}
